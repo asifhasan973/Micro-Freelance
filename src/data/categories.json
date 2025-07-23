@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Web Development",
+    "icon": "🌐",
+    "description": "Frontend, backend, and full-stack web development"
+  },
+  {
+    "id": 2,
+    "name": "Mobile Development",
+    "icon": "📱",
+    "description": "iOS, Android, and cross-platform mobile apps"
+  },
+  {
+    "id": 3,
+    "name": "Design",
+    "icon": "🎨",
+    "description": "UI/UX design, graphic design, and visual arts"
+  },
+  {
+    "id": 4,
+    "name": "Content Writing",
+    "icon": "✍️",
+    "description": "Blog posts, copywriting, and technical writing"
+  },
+  {
+    "id": 5,
+    "name": "Digital Marketing",
+    "icon": "📈",
+    "description": "SEO, social media, and online marketing strategies"
+  },
+  {
+    "id": 6,
+    "name": "Data Science",
+    "icon": "📊",
+    "description": "Data analysis, machine learning, and visualization"
+  },
+  {
+    "id": 7,
+    "name": "AI & Machine Learning",
+    "icon": "🤖",
+    "description": "Artificial intelligence and ML model development"
+  },
+  {
+    "id": 8,
+    "name": "Video & Animation",
+    "icon": "🎬",
+    "description": "Video editing, motion graphics, and animation"
+  },
+  {
+    "id": 9,
+    "name": "Branding",
+    "icon": "🏷️",
+    "description": "Brand identity, logo design, and brand strategy"
+  }
+]

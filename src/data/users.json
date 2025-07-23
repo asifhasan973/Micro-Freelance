@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "John Smith",
+    "email": "john@example.com",
+    "role": "Job Provider",
+    "avatar": "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?w=150",
+    "joinDate": "2023-12-01",
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "name": "Sarah Johnson",
+    "email": "sarah@company.com",
+    "role": "Job Provider",
+    "avatar": "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?w=150",
+    "joinDate": "2023-11-15",
+    "status": "active"
+  },
+  {
+    "id": 3,
+    "name": "Mike Chen",
+    "email": "mike@techblog.com",
+    "role": "Job Seeker",
+    "avatar": "https://images.pexels.com/photos/2182970/pexels-photo-2182970.jpeg?w=150",
+    "joinDate": "2023-10-20",
+    "status": "active"
+  },
+  {
+    "id": 4,
+    "name": "Anna Williams",
+    "email": "anna@startup.com",
+    "role": "Job Provider",
+    "avatar": "https://images.pexels.com/photos/1036623/pexels-photo-1036623.jpeg?w=150",
+    "joinDate": "2023-09-10",
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "name": "David Brown",
+    "email": "david@fintech.com",
+    "role": "Job Seeker",
+    "avatar": "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?w=150",
+    "joinDate": "2023-08-05",
+    "status": "active"
+  },
+  {
+    "id": 6,
+    "name": "Test User",
+    "email": "test@gmail.com",
+    "role": "Job Provider",
+    "avatar": "https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?w=150",
+    "joinDate": "2024-01-01",
+    "status": "active"
+  }
+]

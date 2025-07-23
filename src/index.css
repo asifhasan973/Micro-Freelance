@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.galindo {
+  font-family: "Galindo", sans-serif;
+  font-style: normal;
+}

@@ -95,8 +95,8 @@ const Login: React.FC = () => {
       title="Login - Micro Freelance"
       description="Login to your Micro Freelance account to access all features."
     >
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 grid place-items-center">
-        <div className="max-w-5xl w-full bg-base-100 rounded-3xl shadow-lg p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 grid place-items-center ">
+        <div className="max-w-5xl w-full bg-gray-100 rounded-3xl p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           
           {/* Lottie Animation Container */}
           <div className="max-w-md mx-auto">

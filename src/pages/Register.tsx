@@ -90,7 +90,7 @@ const Register: React.FC = () => {
   return (
     <Layout title="Register - Micro Freelance" description="Create your Micro Freelance account.">
       <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 grid place-items-center">
-        <div className="max-w-5xl w-full bg-base-100 rounded-3xl shadow-lg p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-5xl w-full rounded-3xl bg-gray-100 p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           
           {/* Lottie Animation Container */}
           <div className="max-w-md mx-auto">

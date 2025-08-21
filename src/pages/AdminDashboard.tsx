@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiBriefcase, FiUsers, FiTag, FiBarChart3, FiTrendingUp, FiDollarSign } from 'react-icons/fi';
+import { FiBriefcase, FiUsers, FiTag} from 'react-icons/fi';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import jobsData from '../data/jobs.json';
@@ -46,8 +46,8 @@ const AdminDashboard: React.FC = () => {
     },
     {
       title: 'Total Revenue',
-      value: '$12,450',
-      icon: FiDollarSign,
+      value: '৳32,450',
+      icon: 'Taka',
       color: 'text-info',
       bgColor: 'bg-info/10'
     }

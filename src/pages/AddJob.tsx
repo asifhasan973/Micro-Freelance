@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiBriefcase, FiDollarSign, FiClock, FiTag, FiFileText } from 'react-icons/fi';
+import { FiBriefcase,  FiClock, FiTag, FiFileText } from 'react-icons/fi';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
 import categoriesData from '../data/categories.json';
@@ -148,7 +148,7 @@ const AddJob: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text text-base font-semibold flex items-center">
-                    <FiDollarSign className="w-5 h-5 mr-2 text-success" />
+                    <span className="text-2xl text-success pe-2">৳</span>
                     Budget *
                   </span>
                 </label>

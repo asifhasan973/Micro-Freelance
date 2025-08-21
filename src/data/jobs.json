@@ -2,7 +2,7 @@
   {
     "id": 1,
     "title": "Build a landing page for AI SaaS",
-    "budget": "$120",
+    "budget": "1200",
     "deliveryTime": "3 days",
     "category": "Web Development",
     "description": "Need a clean, responsive UI for our AI SaaS platform. The landing page should include hero section, features, pricing, and testimonials. Must be mobile-responsive and SEO optimized.",
@@ -13,7 +13,7 @@
   {
     "id": 2,
     "title": "Design modern mobile app UI/UX",
-    "budget": "$250",
+    "budget": "2500",
     "deliveryTime": "5 days",
     "category": "Design",
     "description": "Looking for a talented designer to create modern, user-friendly mobile app interfaces. Need wireframes, mockups, and interactive prototypes for a fitness tracking app.",
@@ -24,7 +24,7 @@
   {
     "id": 3,
     "title": "Write technical blog posts about AI",
-    "budget": "$80",
+    "budget": "800",
     "deliveryTime": "2 days",
     "category": "Content Writing",
     "description": "Need 3 well-researched blog posts about artificial intelligence trends, machine learning applications, and tech industry insights. Each post should be 1000+ words with proper SEO optimization.",
@@ -35,7 +35,7 @@
   {
     "id": 4,
     "title": "Develop React Native mobile app",
-    "budget": "$500",
+    "budget": "5000",
     "deliveryTime": "10 days",
     "category": "Mobile Development",
     "description": "Build a cross-platform mobile app using React Native. The app should include user authentication, real-time chat, push notifications, and integration with REST APIs.",
@@ -46,7 +46,7 @@
   {
     "id": 5,
     "title": "Create brand identity and logo",
-    "budget": "$180",
+    "budget": "1800",
     "deliveryTime": "4 days",
     "category": "Branding",
     "description": "Design a complete brand identity for a new fintech startup. Need logo variations, color palette, typography guidelines, and brand style guide documentation.",
@@ -57,18 +57,18 @@
   {
     "id": 6,
     "title": "Build e-commerce website with Next.js",
-    "budget": "$800",
+    "budget": "8000",
     "deliveryTime": "14 days",
     "category": "Web Development",
     "description": "Develop a full-featured e-commerce website using Next.js, Stripe integration, product catalog, shopping cart, user accounts, and admin dashboard.",
     "postedBy": "lisa@ecommerce.com",
-    "postedDate": "2024-01-10",
+    "postedDate": "2024-01-11",
     "status": "open"
   },
   {
     "id": 7,
     "title": "Create explainer video animation",
-    "budget": "$300",
+    "budget": "3000",
     "deliveryTime": "7 days",
     "category": "Video & Animation",
     "description": "Produce a 2-minute animated explainer video for our software product. Need script writing, storyboard, animation, voiceover, and background music.",
@@ -79,7 +79,7 @@
   {
     "id": 8,
     "title": "Social media marketing strategy",
-    "budget": "$150",
+    "budget": "1500",
     "deliveryTime": "3 days",
     "category": "Digital Marketing",
     "description": "Develop comprehensive social media marketing strategy for B2B SaaS company. Include content calendar, engagement tactics, and growth strategies for LinkedIn and Twitter.",
@@ -90,7 +90,7 @@
   {
     "id": 9,
     "title": "Data analysis and visualization",
-    "budget": "$200",
+    "budget": "2000",
     "deliveryTime": "5 days",
     "category": "Data Science",
     "description": "Analyze customer data and create interactive dashboards using Python, Pandas, and Plotly. Need insights on user behavior patterns and business recommendations.",
@@ -101,7 +101,7 @@
   {
     "id": 10,
     "title": "Implement AI chatbot integration",
-    "budget": "$400",
+    "budget": "4000",
     "deliveryTime": "8 days",
     "category": "AI & Machine Learning",
     "description": "Integrate advanced AI chatbot into existing website. Should handle customer support queries, booking appointments, and provide intelligent responses using natural language processing.",

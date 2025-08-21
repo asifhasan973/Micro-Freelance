@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FiClock, FiDollarSign,  FiUser } from 'react-icons/fi';
+import { FiClock,   FiUser } from 'react-icons/fi';
 
 interface Job {
   id: number;
@@ -35,9 +35,11 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <FiDollarSign className="w-4 h-4 text-success" />
-            <span className="text-sm font-semibold text-success">
+          <div className="flex items-center space-x-1">
+            {/* <FiDollarSign className="w-4 h-4 text-success" /> */}
+            <span className="text-xl text-success">৳</span>
+
+            <span className="text-xl font-semibold text-success">
               {job.budget}
             </span>
           </div>

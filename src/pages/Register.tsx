@@ -8,9 +8,12 @@ import { useAuth } from '../contexts/AuthContext';
 import Lottie from 'lottie-react';
 import loginAnimation from '../lottie/register.json';
 
+// 👇 add this import
+import { signInWithGoogle } from '../lib/auth';
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register, user } = useAuth();
+  const { register, user } = useAuth(); // keeps your existing email+password flow
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -19,19 +22,15 @@ const Register: React.FC = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false); // 👈 new
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
+    if (user) navigate('/');
   }, [user, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,27 +39,18 @@ const Register: React.FC = () => {
     const { name, email, password, confirmPassword } = formData;
 
     if (!name || !email || !password || !confirmPassword) {
-      Swal.fire({
-        title: 'Validation Error',
-        text: 'Please fill in all fields.',
-        icon: 'error',
-        confirmButtonColor: '#00B8C6',
-      });
+      Swal.fire({ title: 'Validation Error', text: 'Please fill in all fields.', icon: 'error', confirmButtonColor: '#00B8C6' });
       return;
     }
 
     if (password !== confirmPassword) {
-      Swal.fire({
-        title: 'Password Mismatch',
-        text: 'Passwords do not match.',
-        icon: 'error',
-        confirmButtonColor: '#00B8C6',
-      });
+      Swal.fire({ title: 'Password Mismatch', text: 'Passwords do not match.', icon: 'error', confirmButtonColor: '#00B8C6' });
       return;
     }
 
     setIsSubmitting(true);
 
+    // keep your context-driven registration flow
     setTimeout(() => {
       const success = register(name, email, password);
       if (success) {
@@ -73,16 +63,37 @@ const Register: React.FC = () => {
           showConfirmButton: false,
         }).then(() => navigate('/'));
       } else {
-        Swal.fire({
-          title: 'Registration Failed',
-          text: 'Email may already be in use.',
-          icon: 'error',
-          confirmButtonColor: '#00B8C6',
-        });
+        Swal.fire({ title: 'Registration Failed', text: 'Email may already be in use.', icon: 'error', confirmButtonColor: '#00B8C6' });
       }
-
       setIsSubmitting(false);
     }, 800);
+  };
+
+  // 👇 Google sign-in/up handler
+  const handleGoogle = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await signInWithGoogle(); // creates the account if it doesn't exist
+      Swal.fire({
+        title: 'Signed in with Google',
+        text: 'Welcome to Micro Freelance.',
+        icon: 'success',
+        confirmButtonColor: '#00B8C6',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      Swal.fire({
+        title: 'Google Sign-in Failed',
+        text: err?.message || 'Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#00B8C6',
+      });
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   if (user) return null;
@@ -108,8 +119,7 @@ const Register: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiUser className="w-4 h-4 mr-2 text-primary" />
-                    Name
+                    <FiUser className="w-4 h-4 mr-2 text-primary" /> Name
                   </span>
                 </label>
                 <input
@@ -127,8 +137,7 @@ const Register: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiMail className="w-4 h-4 mr-2 text-primary" />
-                    Email
+                    <FiMail className="w-4 h-4 mr-2 text-primary" /> Email
                   </span>
                 </label>
                 <input
@@ -146,8 +155,7 @@ const Register: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiLock className="w-4 h-4 mr-2 text-primary" />
-                    Password
+                    <FiLock className="w-4 h-4 mr-2 text-primary" /> Password
                   </span>
                 </label>
                 <div className="relative">
@@ -174,8 +182,7 @@ const Register: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiLock className="w-4 h-4 mr-2 text-primary" />
-                    Confirm Password
+                    <FiLock className="w-4 h-4 mr-2 text-primary" /> Confirm Password
                   </span>
                 </label>
                 <input
@@ -197,15 +204,30 @@ const Register: React.FC = () => {
               >
                 {isSubmitting ? 'Signing up...' : 'Sign Up'}
               </button>
+
+              {/* Divider */}
+              <div className="divider text-sm text-base-content/70">or continue with</div>
+
+              {/* Google Button */}
+              <button
+                type="button"
+                onClick={handleGoogle}
+                className={`btn btn-outline btn-lg w-full gap-2 ${isGoogleLoading ? 'loading' : ''}`}
+                disabled={isGoogleLoading}
+              >
+                {/* Google "G" SVG */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" className="w-5 h-5">
+                  <path d="M44.5 20H24v8.5h11.8C34.8 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.3 0 6.3 1.2 8.6 3.2l6-6C34.7 5 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.3-.1-2.7-.5-4z"/>
+                </svg>
+                Continue with Google
+              </button>
             </form>
 
             {/* Footer */}
             <div className="text-center mt-6">
               <p className="text-base-content/70">
                 Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in here
-                </Link>
+                <Link to="/login" className="text-primary hover:underline font-medium">Sign in here</Link>
               </p>
             </div>
           </div>

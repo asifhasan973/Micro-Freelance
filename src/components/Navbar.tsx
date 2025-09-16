@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiSun, FiMoon, FiMenu, FiX, FiBriefcase } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,7 @@ const Navbar: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -19,7 +20,7 @@ const Navbar: React.FC = () => {
       showCancelButton: true,
       confirmButtonColor: '#00B8C6',
       cancelButtonColor: '#6B7280',
-      confirmButtonText: 'Yes, logout'
+      confirmButtonText: 'Yes, logout',
     }).then((result) => {
       if (result.isConfirmed) {
         logout();
@@ -29,7 +30,7 @@ const Navbar: React.FC = () => {
           text: 'You have been successfully logged out.',
           icon: 'success',
           timer: 2000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
       }
     });
@@ -39,11 +40,17 @@ const Navbar: React.FC = () => {
     { to: '/', label: 'Home' },
     { to: '/jobs', label: 'All Jobs' },
     ...(user?.role === 'admin' ? [{ to: '/admin', label: 'Admin Panel' }] : []),
-    ...(user?.role === 'job_provider' ? [
-      { to: '/add-job', label: 'Post Job' },
-      { to: '/my-jobs', label: 'My Jobs' }
-    ] : []),
+    ...(user?.role === 'job_provider'
+      ? [
+          { to: '/add-job', label: 'Post Job' },
+          { to: '/my-jobs', label: 'My Jobs' },
+        ]
+      : []),
+    ...(user ? [{ to: '/user-profile', label: 'View Profile' }] : []),
   ];
+
+  const isActive = (path: string) =>
+    location.pathname === path ? 'text-primary font-semibold' : 'text-base-content';
 
   return (
     <nav className="sticky top-0 z-50 bg-base-100/80 backdrop-blur-md border-b border-base-300">
@@ -54,7 +61,7 @@ const Navbar: React.FC = () => {
             <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
               <FiBriefcase className="w-6 h-6 text-primary" />
             </div>
-            <span className="text-xl md:text-3xl pt-2 font-bold text-base-content galindo">Micro Freelance</span>
+            <span className="text-xl md:text-3xl pt-2 font-bold text-base-content">Micro Freelance</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -63,7 +70,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-base-content hover:text-primary transition-colors font-medium"
+                className={`hover:text-primary transition-colors font-medium ${isActive(link.to)}`}
               >
                 {link.label}
               </Link>
@@ -78,23 +85,14 @@ const Navbar: React.FC = () => {
               className="p-2 rounded-lg bg-base-200 hover:bg-base-300 transition-colors"
               aria-label="Toggle theme"
             >
-              {isDark ? (
-                <FiSun className="w-5 h-5 text-base-content" />
-              ) : (
-                <FiMoon className="w-5 h-5 text-base-content" />
-              )}
+              {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
             </button>
 
             {/* Auth buttons */}
             {user ? (
               <div className="hidden md:flex items-center space-x-4">
-                <span className="text-sm text-base-content">
-                  Welcome, {user.name}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="btn btn-outline btn-sm"
-                >
+                <span className="text-sm">Welcome, {user.name}</span>
+                <button onClick={handleLogout} className="btn btn-outline btn-sm">
                   Logout
                 </button>
               </div>
@@ -114,56 +112,39 @@ const Navbar: React.FC = () => {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="md:hidden p-2 rounded-lg bg-base-200 hover:bg-base-300 transition-colors"
             >
-              {isMenuOpen ? (
-                <FiX className="w-5 h-5 text-base-content" />
-              ) : (
-                <FiMenu className="w-5 h-5 text-base-content" />
-              )}
+              {isMenuOpen ? <FiX className="w-5 h-5" /> : <FiMenu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
         {/* Mobile menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-base-300 animate-slide-up">
+          <div className="md:hidden py-4 border-t border-base-300">
             <div className="flex flex-col space-y-4">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="text-base-content hover:text-primary transition-colors font-medium py-2"
+                  className="hover:text-primary transition-colors font-medium py-2"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
-              
+
               {user ? (
                 <div className="border-t border-base-300 pt-4">
-                  <span className="text-sm text-base-content block mb-2">
-                    Welcome, {user.name}
-                  </span>
-                  <button
-                    onClick={handleLogout}
-                    className="btn btn-outline btn-sm w-full"
-                  >
+                  <span className="text-sm block mb-2">Welcome, {user.name}</span>
+                  <button onClick={handleLogout} className="btn btn-outline btn-sm w-full">
                     Logout
                   </button>
                 </div>
               ) : (
                 <div className="border-t border-base-300 pt-4 space-y-2">
-                  <Link
-                    to="/login"
-                    className="btn btn-ghost btn-sm w-full"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/login" className="btn btn-ghost btn-sm w-full" onClick={() => setIsMenuOpen(false)}>
                     Login
                   </Link>
-                  <Link
-                    to="/register"
-                    className="btn btn-primary btn-sm w-full"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
+                  <Link to="/register" className="btn btn-primary btn-sm w-full" onClick={() => setIsMenuOpen(false)}>
                     Sign Up
                   </Link>
                 </div>

@@ -4,6 +4,9 @@ import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 
+// Components
+import Navbar from './components/Navbar';
+
 // Pages
 import Home from './pages/Home';
 import AllJobs from './pages/AllJobs';
@@ -12,6 +15,8 @@ import AddJob from './pages/AddJob';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
+import UserProfile from './pages/UserProfile';
+import './pages/UserProfile.css';
 
 // Lazy load additional pages
 const MyJobs = React.lazy(() => import('./pages/MyJobs'));
@@ -29,12 +34,17 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <Router>
+            {/* render Navbar once */}
+            <Navbar />
+
             <div className="min-h-screen bg-base-100">
-              <React.Suspense fallback={
-                <div className="min-h-screen flex items-center justify-center">
-                  <div className="loading loading-spinner loading-lg text-primary"></div>
-                </div>
-              }>
+              <React.Suspense
+                fallback={
+                  <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="loading loading-spinner loading-lg text-primary" />
+                  </div>
+                }
+              >
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/jobs" element={<AllJobs />} />
@@ -50,6 +60,7 @@ function App() {
                   <Route path="/admin/categories" element={<AddCategory />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/user-profile" element={<UserProfile />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </React.Suspense>

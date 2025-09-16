@@ -1,32 +1,20 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import Navbar from './Navbar';
-import Footer from './Footer';
 
-interface LayoutProps {
-  children: React.ReactNode;
+type Props = {
   title?: string;
   description?: string;
-}
+  children: React.ReactNode;
+};
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  title = 'Micro Freelance - Modern Job Marketplace',
-  description = 'Find your perfect job or hire talented professionals on Micro Freelance - the modern job marketplace.'
-}) => {
+const Layout: React.FC<Props> = ({ title, description, children }) => {
   return (
     <>
       <Helmet>
-        <title>{title}</title>
-        <meta name="description" content={description} />
+        {title && <title>{title}</title>}
+        {description && <meta name="description" content={description} />}
       </Helmet>
-      <div className="min-h-screen bg-base-100 flex flex-col">
-        <Navbar />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-      </div>
+      <main>{children}</main>
     </>
   );
 };

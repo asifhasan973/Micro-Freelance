@@ -6,7 +6,7 @@ import Swal from 'sweetalert2';
 import { useAuth } from '../contexts/AuthContext';
 
 import Lottie from 'lottie-react';
-import loginAnimation from '../lottie/register.json'; 
+import loginAnimation from '../lottie/register.json';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -82,29 +82,28 @@ const Register: React.FC = () => {
       }
 
       setIsSubmitting(false);
-    }, 1000);
+    }, 800);
   };
 
   if (user) return null;
 
   return (
     <Layout title="Register - Micro Freelance" description="Create your Micro Freelance account.">
-      <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 grid place-items-center">
-        <div className="max-w-5xl w-full rounded-3xl bg-gray-100 p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          
-          {/* Lottie Animation Container */}
+      <div className="min-h-[calc(100vh-64px)] py-12 px-4 sm:px-6 lg:px-8 grid place-items-center">
+        <div className="max-w-5xl w-full rounded-3xl bg-base-200 p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center border border-base-300">
+          {/* Lottie Animation */}
           <div className="max-w-md mx-auto">
             <Lottie animationData={loginAnimation} loop={true} />
           </div>
 
-          {/* Register Form Section */}
+          {/* Register Form */}
           <div>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-base-content mb-2">Create Account</h2>
               <p className="text-base-content/70">Join Micro Freelance and start your journey</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-base-200 rounded-2xl p-8">
+            <form onSubmit={handleSubmit} className="space-y-6 bg-base-100 rounded-2xl p-8 border border-base-300">
               {/* Name */}
               <div className="form-control">
                 <label className="label">
@@ -164,13 +163,9 @@ const Register: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-base-content/60 hover:text-base-content"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/60 hover:text-base-content"
                   >
-                    {showPassword ? (
-                      <FiEyeOff className="w-5 h-5" />
-                    ) : (
-                      <FiEye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>

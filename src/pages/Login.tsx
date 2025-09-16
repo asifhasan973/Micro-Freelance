@@ -1,35 +1,32 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// src/pages/Login.tsx
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Layout from '../components/Layout';
-import { useAuth } from '../contexts/AuthContext';
 import Swal from 'sweetalert2';
 
 import Lottie from 'lottie-react';
-import loginAnimation from '../lottie/Login.json'; // adjust path
+import loginAnimation from '../lottie/Login.json';
+
+// Change if your backend path is different
+const LOGIN_URL = 'http://localhost:8080/login';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, user } = useAuth();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const location = useLocation() as { state?: { from?: string } };
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  React.useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
+  // If already logged in, redirect home
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) navigate('/');
+  }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,55 +37,57 @@ const Login: React.FC = () => {
         title: 'Validation Error',
         text: 'Please fill in all fields.',
         icon: 'error',
-        confirmButtonColor: '#00B8C6'
+        confirmButtonColor: '#00B8C6',
       });
       return;
     }
 
-    setIsSubmitting(true);
+    try {
+      setIsSubmitting(true);
 
-    setTimeout(() => {
-      const success = login(formData.email, formData.password);
+      const res = await fetch(LOGIN_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
 
-      if (success) {
-        Swal.fire({
-          title: 'Login Successful!',
-          text: 'Welcome back to Micro Freelance.',
-          icon: 'success',
-          confirmButtonColor: '#00B8C6',
-          timer: 2000,
-          showConfirmButton: false
-        }).then(() => {
-          navigate('/');
-        });
-      } else {
-        Swal.fire({
-          title: 'Login Failed',
-          text: 'Invalid email or password. Please try again.',
-          icon: 'error',
-          confirmButtonColor: '#00B8C6'
-        });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || 'Invalid email or password.');
+
+      if (!data?.token || !data?.user) {
+        throw new Error('Unexpected server response.');
       }
 
-      setIsSubmitting(false);
-    }, 1000);
-  };
+      // Save auth
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('current_user', JSON.stringify(data.user));
 
-  const fillDemoCredentials = (role: 'admin' | 'user') => {
-    if (role === 'admin') {
-      setFormData({
-        email: 'admin@gmail.com',
-        password: 'admin'
+      // Optional: let other parts of the app know
+      window.dispatchEvent(new Event('auth-updated'));
+
+      await Swal.fire({
+        title: 'Login Successful!',
+        text: 'Welcome back to Micro Freelance.',
+        icon: 'success',
+        confirmButtonColor: '#00B8C6',
+        timer: 1600,
+        showConfirmButton: false,
       });
-    } else {
-      setFormData({
-        email: 'test@gmail.com',
-        password: 'test'
+
+      // Redirect
+      const target = location?.state?.from || '/';
+      navigate(target);
+    } catch (err: any) {
+      Swal.fire({
+        title: 'Login Failed',
+        text: err?.message || 'Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#00B8C6',
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
-
-  if (user) return null;
 
   return (
     <Layout
@@ -97,26 +96,27 @@ const Login: React.FC = () => {
     >
       <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 grid place-items-center ">
         <div className="max-w-5xl w-full bg-gray-100 rounded-3xl p-6 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          
-          {/* Lottie Animation Container */}
+          {/* Animation */}
           <div className="max-w-md mx-auto">
-            <Lottie animationData={loginAnimation} loop={true} />
+            <Lottie animationData={loginAnimation} loop />
           </div>
 
-          {/* Login Form Section */}
+          {/* Form */}
           <div>
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-base-content mb-2">Welcome Back</h2>
               <p className="text-base-content/70">Sign in to your Micro Freelance account</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6 bg-base-200 rounded-2xl p-8">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-6 bg-base-200 rounded-2xl p-8"
+            >
               {/* Email */}
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiMail className="w-4 h-4 mr-2 text-primary" />
-                    Email
+                    <FiMail className="w-4 h-4 mr-2 text-primary" /> Email
                   </span>
                 </label>
                 <input
@@ -134,8 +134,7 @@ const Login: React.FC = () => {
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-semibold flex items-center">
-                    <FiLock className="w-4 h-4 mr-2 text-primary" />
-                    Password
+                    <FiLock className="w-4 h-4 mr-2 text-primary" /> Password
                   </span>
                 </label>
                 <div className="relative">
@@ -158,31 +157,7 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              {/* Demo Credentials */}
-              <div className="bg-base-100 rounded-lg p-4">
-                <p className="text-sm font-semibold text-base-content mb-3">Demo Credentials:</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => fillDemoCredentials('admin')}
-                    className="btn btn-outline btn-sm"
-                  >
-                    Admin Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => fillDemoCredentials('user')}
-                    className="btn btn-outline btn-sm"
-                  >
-                    User Login
-                  </button>
-                </div>
-                <div className="mt-2 text-xs text-base-content/60">
-                  <p>Or use any email with 4+ char password for job seeker access</p>
-                </div>
-              </div>
-
-              {/* Submit Button */}
+              {/* Submit */}
               <button
                 type="submit"
                 className={`btn btn-primary btn-lg w-full ${isSubmitting ? 'loading' : ''}`}

@@ -1,6 +1,6 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,8 +11,10 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Avoid re-initializing in Vite HMR
 export const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+// Persist session across tabs/reloads
+setPersistence(auth, browserLocalPersistence).catch(() => { /* ignore once */ });
+
 export const googleProvider = new GoogleAuthProvider();

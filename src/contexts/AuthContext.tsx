@@ -1,250 +1,170 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+// src/contexts/AuthContext.tsx
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { User as FBUser } from 'firebase/auth';
+import { subscribeToAuth, signInWithEmail, signUpWithEmail, logout as fbLogout } from '../lib/auth';
+import { updateProfile } from 'firebase/auth';
 
-export type Role = 'admin' | 'job_provider' | 'job_seeker';
 export type ThemePref = 'light' | 'dark' | 'system';
 
 export interface UserProfileShape {
-  id: string;
+  id: string;           // Firebase uid
   email: string;
-  role: Role;
   name: string;
-
   // optional profile fields (for UserProfile page)
   phone?: string;
   location?: string;
   bio?: string;
-  avatarUrl?: string;
-
+  avatarUrl?: string;   // Firebase photoURL
   // meta
-  joinedAt?: string;   // ISO string
-  lastActive?: string; // ISO string
-
+  joinedAt?: string;
+  lastActive?: string;
   // simple stats
-  stats?: {
-    posts?: number;
-    projects?: number;
-    followers?: number;
-    following?: number;
-  };
-
+  stats?: { posts?: number; projects?: number; followers?: number; following?: number; };
   // security + prefs
-  security?: {
-    twoFactorEnabled?: boolean;
-    lastLoginIp?: string;
-  };
-  preferences?: {
-    theme?: ThemePref;
-    language?: string; // 'en' | 'bn'
-  };
+  security?: { twoFactorEnabled?: boolean; lastLoginIp?: string; };
+  preferences?: { theme?: ThemePref; language?: string; };
 }
 
 interface AuthContextType {
   user: UserProfileShape | null;
-  login: (email: string, password: string) => boolean;
-  logout: () => void;
   isAuthenticated: boolean;
 
-  // added so Register page works
-  register: (name: string, email: string, password: string) => boolean;
+  // Firebase-backed auth
+  register: (name: string, email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 
-  // used by UserProfile Save
-  updateUser: (patch: Partial<UserProfileShape>) => void;
+  // profile updates (name / avatar kept in Firebase; the rest stored locally)
+  updateUser: (patch: Partial<UserProfileShape>) => Promise<void>;
 }
 
-const LS_USER = 'user';
-const LS_USERS_DB = 'users_db'; // [{ email, password, profile }]
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 };
 
-// ------------ helpers ------------
-function cryptoRandomId(): string {
+// ---- local persisted extras (for fields not stored in Firebase) ----
+const PROFILE_PREFIX = 'profile_'; // key is profile_<uid>
+
+const readLocalProfile = (uid: string): Partial<UserProfileShape> | null => {
   try {
-    const bytes = new Uint8Array(8);
-    (window.crypto || (window as any).msCrypto).getRandomValues(bytes);
-    return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+    const raw = localStorage.getItem(PROFILE_PREFIX + uid);
+    return raw ? JSON.parse(raw) : null;
   } catch {
-    return Math.random().toString(36).slice(2);
+    return null;
   }
+};
+
+const writeLocalProfile = (uid: string, data: Partial<UserProfileShape>) => {
+  localStorage.setItem(PROFILE_PREFIX + uid, JSON.stringify(data));
+};
+
+// ensure defaults exist (useful for first-time Google sign-in)
+const ensureLocalProfile = (u: FBUser) => {
+  const existing = readLocalProfile(u.uid);
+  if (!existing) {
+    writeLocalProfile(u.uid, {
+      preferences: { theme: 'system', language: 'en' },
+      stats: { posts: 0, projects: 0, followers: 0, following: 0 },
+    });
+  }
+};
+
+// ---- map Firebase user -> app profile ----
+function toProfile(u: FBUser | null): UserProfileShape | null {
+  if (!u) return null;
+  const extras = readLocalProfile(u.uid) ?? {};
+  return {
+    id: u.uid,
+    email: u.email || '',
+    name: u.displayName || (extras.name as string) || (u.email ? u.email.split('@')[0] : 'User'),
+    phone: (extras.phone as string) || '',
+    location: (extras.location as string) || '',
+    bio: (extras.bio as string) || '',
+    avatarUrl: u.photoURL || (extras.avatarUrl as string) || '',
+    joinedAt: (extras.joinedAt as string) || u.metadata?.creationTime || new Date().toISOString(),
+    lastActive: new Date().toISOString(),
+    stats: (extras.stats as UserProfileShape['stats']) || { posts: 0, projects: 0, followers: 0, following: 0 },
+    security: (extras.security as UserProfileShape['security']) || { twoFactorEnabled: false, lastLoginIp: '' },
+    preferences: (extras.preferences as UserProfileShape['preferences']) || { theme: 'system', language: 'en' },
+  };
 }
 
-const withDefaults = (
-  u: Partial<UserProfileShape> & Pick<UserProfileShape, 'email' | 'role' | 'name'>
-): UserProfileShape => ({
-  id: u.id ?? cryptoRandomId(),
-  email: u.email,
-  role: u.role,
-  name: u.name,
-
-  phone: u.phone ?? '',
-  location: u.location ?? '',
-  bio: u.bio ?? '',
-  avatarUrl: u.avatarUrl ?? '',
-
-  joinedAt: u.joinedAt ?? new Date().toISOString(),
-  lastActive: new Date().toISOString(),
-
-  stats: {
-    posts: u.stats?.posts ?? 0,
-    projects: u.stats?.projects ?? 0,
-    followers: u.stats?.followers ?? 0,
-    following: u.stats?.following ?? 0,
-  },
-
-  security: {
-    twoFactorEnabled: u.security?.twoFactorEnabled ?? false,
-    lastLoginIp: u.security?.lastLoginIp ?? '',
-  },
-
-  preferences: {
-    theme: u.preferences?.theme ?? 'system',
-    language: u.preferences?.language ?? 'en',
-  },
-});
-
-type UsersDBRow = { email: string; password: string; profile: UserProfileShape };
-
-const readUsersDB = (): UsersDBRow[] => {
-  try {
-    const raw = localStorage.getItem(LS_USERS_DB);
-    return raw ? (JSON.parse(raw) as UsersDBRow[]) : [];
-  } catch {
-    return [];
-  }
-};
-const writeUsersDB = (rows: UsersDBRow[]) => {
-  localStorage.setItem(LS_USERS_DB, JSON.stringify(rows));
-};
-
-// ------------ provider ------------
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<UserProfileShape | null>(() => {
-    try {
-      const raw = localStorage.getItem(LS_USER);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed) return null;
-      const basic = {
-        email: parsed.email as string,
-        role: parsed.role as Role,
-        name: parsed.name as string,
-      };
-      return withDefaults({ ...parsed, ...basic });
-    } catch {
-      return null;
-    }
-  });
+  const [fbUser, setFbUser] = useState<FBUser | null>(null);
+  const [user, setUser] = useState<UserProfileShape | null>(null);
 
-  // persist current user
+  // subscribe to Firebase auth state
   useEffect(() => {
-    if (user) localStorage.setItem(LS_USER, JSON.stringify(user));
-    else localStorage.removeItem(LS_USER);
-  }, [user]);
+    const unsub = subscribeToAuth((u) => {
+      if (u) ensureLocalProfile(u);
+      setFbUser(u);
+    });
+    return () => unsub();
+  }, []);
 
-  // --- register ---
-  const register = (name: string, email: string, password: string): boolean => {
-    const db = readUsersDB();
-    const exists = db.find((r) => r.email.toLowerCase() === email.toLowerCase());
-    if (exists) return false;
+  // derive our profile whenever Firebase user changes
+  useEffect(() => {
+    setUser(toProfile(fbUser));
+  }, [fbUser]);
 
-    const profile = withDefaults({
-      email,
-      role: 'job_seeker',
+  const register = async (name: string, email: string, password: string) => {
+    const cred = await signUpWithEmail(name, email, password);
+    // seed local extras
+    writeLocalProfile(cred.user.uid, {
       name,
-      bio: '',
-      avatarUrl: '',
       preferences: { theme: 'system', language: 'en' },
+      stats: { posts: 0, projects: 0, followers: 0, following: 0 },
     });
-
-    db.push({ email, password, profile });
-    writeUsersDB(db);
-
-    setUser(profile);
-    localStorage.setItem(LS_USER, JSON.stringify(profile));
-    return true;
+    setUser(toProfile(cred.user));
   };
 
-  // --- login ---
-  const login = (email: string, password: string): boolean => {
-    // 1) try registered users db
-    const db = readUsersDB();
-    const row = db.find(
-      (r) => r.email.toLowerCase() === email.toLowerCase() && r.password === password
-    );
-    if (row) {
-      const prof = withDefaults({ ...row.profile, email: row.profile.email, role: row.profile.role, name: row.profile.name });
-      setUser(prof);
-      localStorage.setItem(LS_USER, JSON.stringify(prof));
-      return true;
-    }
-
-    // 2) fallback: your previous dummy credentials
-    let base: { email: string; role: Role; name: string } | null = null;
-
-    if (email === 'admin@gmail.com' && password === 'admin') {
-      base = { email, role: 'admin', name: 'Admin User' };
-    } else if (email === 'test@gmail.com' && password === 'test') {
-      base = { email, role: 'job_provider', name: 'Test User' };
-    } else if (email.includes('@') && password.length >= 4) {
-      const nm = email.split('@')[0];
-      base = { email, role: 'job_seeker', name: nm.charAt(0).toUpperCase() + nm.slice(1) };
-    }
-
-    if (!base) return false;
-
-    const enriched = withDefaults(base);
-    setUser(enriched);
-    localStorage.setItem(LS_USER, JSON.stringify(enriched));
-    return true;
+  const login = async (email: string, password: string) => {
+    const cred = await signInWithEmail(email, password);
+    setUser(toProfile(cred.user));
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await fbLogout();
     setUser(null);
-    localStorage.removeItem(LS_USER);
   };
 
-  // update profile (deep merge relevant parts)
-  const updateUser = (patch: Partial<UserProfileShape>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const next: UserProfileShape = {
-        ...prev,
-        ...patch,
-        preferences: { ...prev.preferences, ...patch.preferences },
-        security: { ...prev.security, ...patch.security },
-        stats: { ...prev.stats, ...patch.stats },
-        lastActive: patch.lastActive ?? new Date().toISOString(),
-      };
-      localStorage.setItem(LS_USER, JSON.stringify(next));
+  const updateUser = async (patch: Partial<UserProfileShape>) => {
+    if (!fbUser) return;
+    const local = readLocalProfile(fbUser.uid) ?? {};
+    // update Firebase displayName/photo if included
+    const needsFirebaseUpdate =
+      (patch.name && patch.name !== fbUser.displayName) ||
+      (patch.avatarUrl && patch.avatarUrl !== fbUser.photoURL);
 
-      // also sync users_db if this user came from there
-      const db = readUsersDB();
-      const i = db.findIndex((r) => r.email.toLowerCase() === prev.email.toLowerCase());
-      if (i !== -1) {
-        db[i] = { ...db[i], profile: next };
-        writeUsersDB(db);
-      }
+    if (needsFirebaseUpdate) {
+      await updateProfile(fbUser, {
+        displayName: patch.name ?? fbUser.displayName ?? undefined,
+        photoURL: patch.avatarUrl ?? fbUser.photoURL ?? undefined,
+      });
+    }
 
-      return next;
-    });
+    const mergedLocal = {
+      ...local,
+      ...patch,
+      preferences: { ...(local.preferences || {}), ...(patch.preferences || {}) },
+      security: { ...(local.security || {}), ...(patch.security || {}) },
+      stats: { ...(local.stats || {}), ...(patch.stats || {}) },
+    };
+    writeLocalProfile(fbUser.uid, mergedLocal);
+    setUser(toProfile({ ...fbUser }));
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        logout,
-        isAuthenticated: !!user,
-        register,
-        updateUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    isAuthenticated: !!user,
+    register,
+    login,
+    logout,
+    updateUser,
+  }), [user]);
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

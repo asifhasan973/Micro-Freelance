@@ -1,9 +1,21 @@
+// src/components/Navbar.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { FiSun, FiMoon, FiMenu, FiX, FiBriefcase } from 'react-icons/fi';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import Swal from 'sweetalert2';
+
+const Avatar: React.FC<{ name: string; src?: string }> = ({ name, src }) => {
+  const initials = name?.[0]?.toUpperCase() || 'U';
+  return src ? (
+    <img src={src} alt={name} className="w-8 h-8 rounded-full object-cover border border-base-300" />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-primary text-white grid place-items-center text-sm font-semibold">
+      {initials}
+    </div>
+  );
+};
 
 const Navbar: React.FC = () => {
   const { isDark, toggleTheme } = useTheme();
@@ -21,36 +33,54 @@ const Navbar: React.FC = () => {
       confirmButtonColor: '#00B8C6',
       cancelButtonColor: '#6B7280',
       confirmButtonText: 'Yes, logout',
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        logout();
+        await logout();
         navigate('/');
         Swal.fire({
           title: 'Logged out!',
           text: 'You have been successfully logged out.',
           icon: 'success',
-          timer: 2000,
+          timer: 1600,
           showConfirmButton: false,
         });
       }
     });
   };
 
+  // Everyone sees everything. Mark routes that should prompt login if user is not authenticated.
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/jobs', label: 'All Jobs' },
-    ...(user?.role === 'admin' ? [{ to: '/admin', label: 'Admin Panel' }] : []),
-    ...(user?.role === 'job_provider'
-      ? [
-          { to: '/add-job', label: 'Post Job' },
-          { to: '/my-jobs', label: 'My Jobs' },
-        ]
-      : []),
-    ...(user ? [{ to: '/user-profile', label: 'View Profile' }] : []),
+    { to: '/', label: 'Home', requiresAuth: false },
+    { to: '/jobs', label: 'All Jobs', requiresAuth: false },
+    { to: '/add-job', label: 'Post Job', requiresAuth: true },
+    { to: '/my-jobs', label: 'My Jobs', requiresAuth: true },
+    { to: '/user-profile', label: 'View Profile', requiresAuth: true },
   ];
 
   const isActive = (path: string) =>
     location.pathname === path ? 'text-primary font-semibold' : 'text-base-content';
+
+  // Centralized click handler that shows Swal if auth is required
+  const handleNavClick = (to: string, requiresAuth: boolean) => (e: React.MouseEvent) => {
+    if (requiresAuth && !user) {
+      e.preventDefault();
+      Swal.fire({
+        title: 'Login required',
+        text: 'Please log in to access this page.',
+        icon: 'info',
+        confirmButtonText: 'Go to Login',
+        showCancelButton: true,
+        confirmButtonColor: '#00B8C6',
+      }).then((res) => {
+        if (res.isConfirmed) {
+          navigate('/login', { state: { from: to } });
+        }
+      });
+      return;
+    }
+    // close mobile menu after navigating
+    setIsMenuOpen(false);
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-base-100/80 backdrop-blur-md border-b border-base-300">
@@ -70,6 +100,7 @@ const Navbar: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={handleNavClick(link.to, link.requiresAuth)}
                 className={`hover:text-primary transition-colors font-medium ${isActive(link.to)}`}
               >
                 {link.label}
@@ -77,9 +108,8 @@ const Navbar: React.FC = () => {
             ))}
           </div>
 
-          {/* Right side buttons */}
+          {/* Right side */}
           <div className="flex items-center space-x-4">
-            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg bg-base-200 hover:bg-base-300 transition-colors"
@@ -88,10 +118,10 @@ const Navbar: React.FC = () => {
               {isDark ? <FiSun className="w-5 h-5" /> : <FiMoon className="w-5 h-5" />}
             </button>
 
-            {/* Auth buttons */}
             {user ? (
-              <div className="hidden md:flex items-center space-x-4">
-                <span className="text-sm">Welcome, {user.name}</span>
+              <div className="hidden md:flex items-center space-x-3">
+                <Avatar name={user.name} src={user.avatarUrl} />
+                <span className="text-sm max-w-[140px] truncate">Hi, {user.name}</span>
                 <button onClick={handleLogout} className="btn btn-outline btn-sm">
                   Logout
                 </button>
@@ -125,17 +155,20 @@ const Navbar: React.FC = () => {
                 <Link
                   key={link.to}
                   to={link.to}
+                  onClick={handleNavClick(link.to, link.requiresAuth)}
                   className="hover:text-primary transition-colors font-medium py-2"
-                  onClick={() => setIsMenuOpen(false)}
                 >
                   {link.label}
                 </Link>
               ))}
 
               {user ? (
-                <div className="border-t border-base-300 pt-4">
-                  <span className="text-sm block mb-2">Welcome, {user.name}</span>
-                  <button onClick={handleLogout} className="btn btn-outline btn-sm w-full">
+                <div className="border-t border-base-300 pt-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar name={user.name} src={user.avatarUrl} />
+                    <span className="text-sm">Hi, {user.name}</span>
+                  </div>
+                  <button onClick={handleLogout} className="btn btn-outline btn-sm">
                     Logout
                   </button>
                 </div>
